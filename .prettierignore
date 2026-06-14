@@ -1,5 +1,7 @@
 .agents/
 .astro/
+content/
 dist/
 node_modules/
+pnpm-lock.yaml
 public/og-default.png

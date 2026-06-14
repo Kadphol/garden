@@ -37,15 +37,15 @@ summary: Optional list-page summary.
 ## Development
 
 ```sh
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Run production checks with:
 
 ```sh
-npm run build
-npm run format:check
+pnpm build
+pnpm format:check
 ```
 
 Set `SITE_URL` to the production origin so canonical URLs, RSS, sitemap, robots,

@@ -37,7 +37,7 @@ pages use `page`.
 
 1. Write and preview the Markdown entry.
 2. Keep `published: false` while the entry is private or incomplete.
-3. Run `npm run build` to validate schemas and generated routes.
+3. Run `pnpm build` to validate schemas and generated routes.
 4. Change the entry to `published: true`.
 5. Commit and push.
 

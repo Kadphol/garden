@@ -4,7 +4,7 @@
 
 1. Import the Git repository into Vercel.
 2. Keep the detected framework preset as Astro.
-3. Use `npm run build` as the build command.
+3. Use `pnpm build` as the build command.
 4. Use `dist` as the output directory.
 
 These values are also declared in `vercel.json`.
@@ -25,8 +25,8 @@ files.
 
 Vercel's Git integration creates preview deployments for pull requests and a
 production deployment for pushes to the configured production branch. The
-GitHub Actions workflow runs `npm ci`, formatting checks, Astro schema/type
-checks, and the static build independently.
+GitHub Actions installs dependencies with pnpm's frozen lockfile, then runs
+formatting checks, Astro schema/type checks, and the static build independently.
 
 ## Domain and crawl checks
 

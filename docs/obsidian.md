@@ -31,5 +31,5 @@ normal Markdown links are the portable publishing format.
 
 ## Validation
 
-Run `npm run check` after changing frontmatter. Astro reports the file and field
+Run `pnpm check` after changing frontmatter. Astro reports the file and field
 when an entry does not match its collection schema.
