@@ -1,0 +1,44 @@
+---
+import type { GetStaticPaths } from "astro";
+import ContentRow from "@/components/ContentRow.astro";
+import {
+  getAllPublished,
+  getAllTags,
+  tagSlug,
+  type ContentEntry,
+} from "@/lib/content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+export const getStaticPaths = (async () => {
+  const entries = await getAllPublished();
+  return getAllTags(entries).map(([tag]) => ({
+    params: { tag: tagSlug(tag) },
+    props: {
+      tag,
+      entries: entries.filter((entry) => entry.data.tags.includes(tag)),
+    },
+  }));
+}) satisfies GetStaticPaths;
+
+const { tag, entries } = Astro.props as {
+  tag: string;
+  entries: ContentEntry[];
+};
+---
+
+<BaseLayout
+  title={`${tag} — Tags — Kadphol`}
+  description={`Published notes, writing, and projects tagged ${tag}.`}
+>
+  <section class="shell pt-14">
+    <p class="eyeline text-accent">Tag</p>
+    <h1 class="display my-3 text-[clamp(4rem,8vw,7rem)]">{tag}</h1>
+    <p class="text-xl text-muted">
+      {entries.length} published {entries.length === 1 ? "entry" : "entries"}
+    </p>
+
+    <div class="mt-12 border-t border-[var(--accent)]">
+      {entries.map((entry, index) => <ContentRow {entry} {index} showType />)}
+    </div>
+  </section>
+</BaseLayout>

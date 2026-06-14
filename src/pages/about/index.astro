@@ -1,0 +1,57 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const pages = await getCollection("pages", ({ data }) => data.published);
+const about = pages.find((entry) => entry.id === "about");
+const rendered = about ? await render(about) : undefined;
+const Content = rendered?.Content;
+---
+
+<BaseLayout
+  title="About — Kadphol"
+  description={about?.data.description ??
+    "Professional profile, experience, skills, and contact links."}
+  type="article"
+  publishedTime={about?.data.date}
+  updatedTime={about?.data.updated}
+>
+  <section
+    class="shell grid grid-cols-[12rem_minmax(0,44rem)] gap-12 pt-14 max-md:block"
+  >
+    <aside class="border-r border-[var(--accent)] pr-8 max-md:hidden">
+      <p class="eyeline text-accent">Profile</p>
+      <p class="display my-3 text-7xl text-accent">A</p>
+      <p class="mt-8 text-sm text-muted">
+        Software engineer, systems thinker, and lifelong learner.
+      </p>
+    </aside>
+    <article>
+      <h1 class="display m-0 text-[clamp(4rem,8vw,7rem)]">
+        {about?.data.title ?? "About"}
+      </h1>
+      {
+        about && Content ? (
+          <>
+            <p class="mt-5 text-xl leading-relaxed text-muted">
+              {about.data.description}
+            </p>
+            <div class="prose mt-12">
+              <Content />
+            </div>
+          </>
+        ) : (
+          <div class="mt-12 border-y rule py-10">
+            <p class="m-0 text-lg font-medium">
+              Profile content is not configured.
+            </p>
+            <p class="mb-0 mt-2 text-muted">
+              Add a published <code>content/pages/about.md</code> file to
+              populate biography, experience, skills, and links.
+            </p>
+          </div>
+        )
+      }
+    </article>
+  </section>
+</BaseLayout>

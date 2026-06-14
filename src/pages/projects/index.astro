@@ -1,0 +1,55 @@
+---
+import EmptyState from "@/components/EmptyState.astro";
+import TagList from "@/components/TagList.astro";
+import { entryHref, getPublishedProjects } from "@/lib/content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const projects = await getPublishedProjects();
+---
+
+<BaseLayout
+  title="Projects — Kadphol"
+  description="Selected professional work, open-source tools, and side projects."
+>
+  <section class="shell pt-14">
+    <h1 class="display m-0 text-[clamp(4rem,8vw,7rem)]">Projects</h1>
+    <p class="mt-4 max-w-2xl text-xl text-muted">
+      Selected professional work, open-source tools, and side projects.
+    </p>
+
+    <div class="mt-16 border-t border-[var(--accent)]">
+      {
+        projects.length > 0 ? (
+          projects.map((entry, index) => (
+            <article class="grid grid-cols-[7rem_minmax(0,1fr)_1.5rem] gap-8 border-b rule py-10 max-sm:grid-cols-[4rem_minmax(0,1fr)]">
+              <span class="display text-6xl text-accent">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <p class="eyeline text-accent">{entry.data.status}</p>
+                <h2 class="display my-3 text-4xl">
+                  <a class="no-underline" href={entryHref(entry)}>
+                    {entry.data.title}
+                  </a>
+                </h2>
+                <p class="max-w-2xl text-muted">{entry.data.description}</p>
+                <TagList tags={entry.data.tags} />
+              </div>
+              <span
+                class="text-2xl text-accent max-sm:hidden"
+                aria-hidden="true"
+              >
+                →
+              </span>
+            </article>
+          ))
+        ) : (
+          <EmptyState
+            title="The portfolio is ready for its first case study"
+            path="content/projects/"
+          />
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

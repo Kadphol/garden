@@ -1,0 +1,14 @@
+---
+import type { ContentEntry, ProjectEntry } from "@/lib/content";
+import ArticleLayout from "./ArticleLayout.astro";
+
+interface Props {
+  entry: ProjectEntry;
+  related?: ContentEntry[];
+  backlinks?: ContentEntry[];
+}
+
+const { entry, related = [], backlinks = [] } = Astro.props;
+---
+
+<ArticleLayout {entry} {related} {backlinks} index="P01" />

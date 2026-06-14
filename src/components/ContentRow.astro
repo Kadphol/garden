@@ -1,0 +1,54 @@
+---
+import {
+  contentDate,
+  entryHref,
+  entryTypeLabel,
+  formatDate,
+  type ContentEntry,
+} from "@/lib/content";
+import TagList from "./TagList.astro";
+
+interface Props {
+  entry: ContentEntry;
+  index?: number;
+  showType?: boolean;
+}
+
+const { entry, index, showType = false } = Astro.props;
+---
+
+<article
+  class="group grid grid-cols-[minmax(0,1fr)_10rem_8rem_1.5rem] items-center gap-6 border-b rule py-5 max-lg:grid-cols-[minmax(0,1fr)_8rem_1.5rem] max-md:grid-cols-[minmax(0,1fr)_1.5rem]"
+>
+  <div class="min-w-0">
+    <div class="mb-1 flex items-baseline gap-3">
+      {
+        index !== undefined && (
+          <span class="font-serif text-lg text-accent">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+        )
+      }
+      <h2 class="m-0 text-lg font-semibold leading-snug tracking-[-0.02em]">
+        <a class="no-underline" href={entryHref(entry)}>{entry.data.title}</a>
+      </h2>
+    </div>
+    <p class="m-0 max-w-2xl text-sm text-muted">
+      {entry.data.summary ?? entry.data.description}
+    </p>
+  </div>
+  <div class="max-md:hidden">
+    <TagList tags={entry.data.tags} />
+  </div>
+  <div class="text-xs text-muted max-lg:hidden">
+    {showType ? entryTypeLabel(entry) : entry.data.status}
+    <br />
+    <time datetime={contentDate(entry).toISOString()}>
+      {formatDate(contentDate(entry))}
+    </time>
+  </div>
+  <span
+    class="text-lg text-accent transition-transform group-hover:translate-x-1"
+    aria-hidden="true">→</span
+  >
+</article>

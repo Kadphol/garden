@@ -1,0 +1,20 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Page not found — Kadphol"
+  description="The requested page could not be found."
+>
+  <section class="shell py-28">
+    <p class="eyeline text-accent">Error 404</p>
+    <h1 class="display my-5 text-[clamp(4rem,9vw,8rem)]">Page not found.</h1>
+    <p class="max-w-xl text-xl text-muted">
+      This note may have moved, changed its title, or returned to the private
+      vault.
+    </p>
+    <a class="mt-8 inline-block text-lg text-accent" href="/">
+      Return home <span aria-hidden="true">→</span>
+    </a>
+  </section>
+</BaseLayout>

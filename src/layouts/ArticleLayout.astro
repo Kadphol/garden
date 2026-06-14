@@ -1,0 +1,205 @@
+---
+import { render } from "astro:content";
+import ContentRow from "@/components/ContentRow.astro";
+import TagList from "@/components/TagList.astro";
+import {
+  contentDate,
+  entryHref,
+  entryTypeLabel,
+  formatDate,
+  readingTime,
+  type ContentEntry,
+} from "@/lib/content";
+import BaseLayout from "./BaseLayout.astro";
+
+interface Props {
+  entry: ContentEntry;
+  related?: ContentEntry[];
+  backlinks?: ContentEntry[];
+  index?: string;
+}
+
+const { entry, related = [], backlinks = [], index = "01" } = Astro.props;
+const { Content, headings } = await render(entry);
+const toc = headings.filter(({ depth }) => depth === 2 || depth === 3);
+const description = entry.data.summary ?? entry.data.description;
+const canonical = new URL(entryHref(entry), Astro.site).toString();
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": entry.collection === "posts" ? "BlogPosting" : "Article",
+  headline: entry.data.title,
+  description,
+  datePublished: entry.data.date.toISOString(),
+  dateModified: contentDate(entry).toISOString(),
+  author: {
+    "@type": "Person",
+    name: "Kadphol",
+  },
+  mainEntityOfPage: canonical,
+  keywords: entry.data.tags.join(", "),
+};
+---
+
+<BaseLayout
+  title={`${entry.data.title} — Kadphol`}
+  {description}
+  {canonical}
+  type="article"
+  publishedTime={entry.data.date}
+  updatedTime={contentDate(entry)}
+  {structuredData}
+>
+  <div
+    class="shell grid grid-cols-[8rem_minmax(0,44rem)_minmax(12rem,1fr)] gap-10 pt-14 max-xl:grid-cols-[minmax(0,44rem)_minmax(12rem,1fr)] max-lg:block"
+  >
+    <aside class="border-r border-[var(--accent)] pr-6 max-xl:hidden">
+      <p class="eyeline text-accent">Index</p>
+      <p class="display my-3 text-7xl text-accent">{index}</p>
+      <div class="mt-8 h-px w-12 bg-[var(--accent)]"></div>
+      <p class="mt-8 text-sm text-muted">
+        Notes on building, thinking, and learning in public.
+      </p>
+    </aside>
+
+    <article class="min-w-0">
+      <header class="border-b rule pb-8">
+        <p class="eyeline mb-5 text-accent">{entryTypeLabel(entry)}</p>
+        <h1 class="display m-0 text-[clamp(3rem,7vw,5.7rem)]">
+          {entry.data.title}
+        </h1>
+        <p class="mt-6 max-w-3xl text-xl leading-relaxed text-muted">
+          {entry.data.description}
+        </p>
+        <div
+          class="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted"
+        >
+          <span>{entry.data.status}</span>
+          <span>
+            Updated <time datetime={contentDate(entry).toISOString()}>
+              {formatDate(contentDate(entry))}
+            </time>
+          </span>
+          <span>{readingTime(entry.body)}</span>
+          <TagList tags={entry.data.tags} />
+        </div>
+      </header>
+
+      <div class="prose mt-10">
+        <Content />
+      </div>
+
+      {
+        related.length > 0 && (
+          <section class="mt-20 border-t border-[var(--accent)] pt-5">
+            <h2 class="display mb-3 text-3xl">Related notes</h2>
+            {related.map((item) => (
+              <ContentRow entry={item} showType />
+            ))}
+          </section>
+        )
+      }
+    </article>
+
+    <aside
+      class="sticky top-8 h-fit border-l rule pl-7 max-lg:static max-lg:mt-14 max-lg:border-l-0 max-lg:border-t max-lg:pt-8"
+    >
+      {
+        toc.length > 0 && (
+          <>
+            <h2 class="eyeline mb-4">On this page</h2>
+            <ol class="m-0 list-none space-y-3 p-0 text-sm">
+              {toc.map(({ slug, text, depth }, position) => (
+                <li class:list={[depth === 3 && "pl-4"]}>
+                  <a
+                    class:list={[
+                      "no-underline hover:text-[var(--accent)]",
+                      position === 0 && "text-accent",
+                    ]}
+                    href={`#${slug}`}
+                  >
+                    {text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </>
+        )
+      }
+      {
+        backlinks.length > 0 && (
+          <div class="mt-10 border-t rule pt-6">
+            <h2 class="eyeline mb-4">Linked from</h2>
+            <ul class="m-0 list-none space-y-3 p-0 text-sm">
+              {backlinks.map((item) => (
+                <li>
+                  <a
+                    class="no-underline hover:text-[var(--accent)]"
+                    href={entryHref(item)}
+                  >
+                    {item.data.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+    </aside>
+  </div>
+</BaseLayout>
+
+<script>
+  const enhanceCodeBlocks = () => {
+    document.querySelectorAll<HTMLPreElement>(".prose pre").forEach((pre) => {
+      if (
+        pre.querySelector(".language-mermaid") ||
+        pre.querySelector("button")
+      ) {
+        return;
+      }
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Copy";
+      button.className =
+        "float-right mb-2 border border-[var(--rule)] bg-[var(--paper)] px-2 py-1 font-sans text-xs";
+      button.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(
+          pre.querySelector("code")?.textContent ?? "",
+        );
+        button.textContent = "Copied";
+        window.setTimeout(() => (button.textContent = "Copy"), 1200);
+      });
+      pre.prepend(button);
+    });
+  };
+
+  const renderMermaid = async () => {
+    const blocks = [
+      ...document.querySelectorAll<HTMLElement>("pre code.language-mermaid"),
+    ];
+    if (blocks.length === 0) return;
+
+    const { default: mermaid } = await import("mermaid");
+    const dark = document.documentElement.dataset.theme === "dark";
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark ? "dark" : "neutral",
+      securityLevel: "strict",
+      fontFamily: "Inter Variable, sans-serif",
+    });
+
+    const nodes = blocks.map((code) => {
+      const container = document.createElement("div");
+      container.className = "mermaid";
+      container.textContent = code.textContent ?? "";
+      code.parentElement?.replaceWith(container);
+      return container;
+    });
+    await mermaid.run({ nodes });
+  };
+
+  enhanceCodeBlocks();
+  renderMermaid();
+</script>

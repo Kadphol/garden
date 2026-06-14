@@ -1,0 +1,17 @@
+---
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-28 border-t rule">
+  <div
+    class="shell flex items-center justify-between gap-6 py-8 text-sm max-sm:flex-col max-sm:items-start"
+  >
+    <p class="m-0 text-muted">© {year} Kadphol. Built with Astro.</p>
+    <nav class="flex flex-wrap gap-5" aria-label="Footer">
+      <a href="/rss.xml">RSS</a>
+      <a href="/tags/">Tags</a>
+      <a href="https://github.com/" rel="me">GitHub</a>
+      <a href="/sitemap-index.xml">Sitemap</a>
+    </nav>
+  </div>
+</footer>

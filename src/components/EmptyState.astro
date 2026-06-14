@@ -1,0 +1,18 @@
+---
+interface Props {
+  title: string;
+  path: string;
+  compact?: boolean;
+}
+
+const { title, path, compact = false } = Astro.props;
+---
+
+<div
+  class:list={["border-b rule text-muted", compact ? "py-5 text-sm" : "py-10"]}
+>
+  <p class="m-0 font-medium text-[var(--ink)]">{title}</p>
+  <p class="mb-0 mt-1 text-sm">
+    Add a published Markdown file to <code>{path}</code>.
+  </p>
+</div>

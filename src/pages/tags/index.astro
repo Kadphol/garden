@@ -1,0 +1,46 @@
+---
+import TagGraph from "@/components/TagGraph.astro";
+import { getAllPublished, getAllTags, tagSlug } from "@/lib/content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const entries = await getAllPublished();
+const tags = getAllTags(entries);
+---
+
+<BaseLayout
+  title="Tags — Kadphol"
+  description="Browse garden notes, writing, and projects by topic."
+>
+  <section class="shell pt-14">
+    <h1 class="display m-0 text-[clamp(4rem,8vw,7rem)]">Tags</h1>
+    <p class="mt-4 text-xl text-muted">
+      Browse garden notes, writing, and projects by topic.
+    </p>
+
+    <div class="mt-14 border-t border-[var(--accent)]">
+      {
+        tags.length > 0 ? (
+          tags.map(([tag, count], index) => (
+            <a
+              class="grid grid-cols-[5rem_minmax(0,1fr)_4rem] items-center gap-5 border-b rule py-6 no-underline"
+              href={`/tags/${tagSlug(tag)}/`}
+            >
+              <span class="font-serif text-3xl text-accent">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span class="display text-3xl">{tag}</span>
+              <span class="text-right text-sm text-muted">
+                {count} {count === 1 ? "entry" : "entries"}
+              </span>
+            </a>
+          ))
+        ) : (
+          <p class="border-b rule py-10 text-muted">
+            Tags appear here when published entries are added to the vault.
+          </p>
+        )
+      }
+    </div>
+    <TagGraph {entries} />
+  </section>
+</BaseLayout>

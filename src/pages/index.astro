@@ -1,0 +1,190 @@
+---
+import EmptyState from "@/components/EmptyState.astro";
+import SectionHeading from "@/components/SectionHeading.astro";
+import {
+  entryHref,
+  formatDate,
+  getPublishedGarden,
+  getPublishedPosts,
+  getPublishedProjects,
+} from "@/lib/content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const [garden, posts, projects] = await Promise.all([
+  getPublishedGarden(),
+  getPublishedPosts(),
+  getPublishedProjects(),
+]);
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Kadphol",
+  url: Astro.site,
+  description:
+    "A digital garden, technical blog, project portfolio, and professional profile.",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${Astro.site}search/?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+};
+---
+
+<BaseLayout {structuredData}>
+  <section
+    class="shell grid min-h-[31rem] grid-cols-[10rem_minmax(0,1fr)_13rem] items-center gap-16 border-b border-[var(--accent)] py-10 max-lg:grid-cols-[minmax(0,1fr)_13rem] max-lg:gap-10 max-md:block max-md:min-h-0"
+  >
+    <aside class="border-r border-[var(--accent)] pr-6 max-lg:hidden">
+      <p class="eyeline text-accent">Index</p>
+      <p class="display my-3 text-7xl text-accent">01</p>
+      <div class="h-px w-12 bg-[var(--accent)]"></div>
+      <p class="mt-8 text-sm text-muted">
+        Notes on building, thinking, and learning in public.
+      </p>
+    </aside>
+
+    <div>
+      <h1 class="display m-0 max-w-4xl text-[clamp(3.5rem,6vw,5.75rem)]">
+        Notes on software, systems, and the work of <em>learning</em>.
+      </h1>
+      <p class="mt-7 max-w-2xl text-xl leading-relaxed text-muted">
+        A living collection of technical notes, essays, and projects—written to
+        clarify ideas and make useful things.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-8">
+        <a class="text-lg font-medium text-accent" href="/garden/">
+          Explore the garden <span aria-hidden="true">→</span>
+        </a>
+        <a class="text-lg font-medium" href="/writing/">Read recent writing</a>
+      </div>
+    </div>
+
+    <blockquote
+      class="m-0 border-t border-[var(--accent)] pt-5 font-mono text-sm leading-relaxed max-md:mt-14"
+    >
+      Teach the idea.<br />
+      Build the thing.<br />
+      Write it down.<br />
+      Repeat.
+      <footer class="mt-5 text-accent">— KADPHOL</footer>
+    </blockquote>
+  </section>
+
+  <section
+    class="shell grid grid-cols-3 gap-10 py-16 max-lg:grid-cols-2 max-md:block"
+  >
+    <div class="max-md:mb-16">
+      <SectionHeading
+        index="02"
+        title="Featured notes"
+        href="/garden/"
+        linkLabel="All notes"
+      />
+      {
+        garden.length > 0 ? (
+          garden.slice(0, 5).map((entry) => (
+            <article class="group border-b rule py-4">
+              <h3 class="m-0 text-lg font-medium leading-snug">
+                <a class="no-underline" href={entryHref(entry)}>
+                  {entry.data.title}
+                </a>
+              </h3>
+              <p class="mb-0 mt-1 text-sm text-muted">
+                {entry.data.summary ?? entry.data.description}
+                <span
+                  class="ml-2 text-accent transition-transform group-hover:translate-x-1"
+                  aria-hidden="true"
+                >
+                  →
+                </span>
+              </p>
+            </article>
+          ))
+        ) : (
+          <EmptyState
+            title="No published garden notes yet"
+            path="content/garden/"
+            compact
+          />
+        )
+      }
+    </div>
+
+    <div
+      class="border-x rule px-10 max-lg:border-r-0 max-md:mb-16 max-md:border-x-0 max-md:px-0"
+    >
+      <SectionHeading
+        index="03"
+        title="Selected projects"
+        href="/projects/"
+        linkLabel="All projects"
+      />
+      {
+        projects.length > 0 ? (
+          projects.slice(0, 2).map((entry, index) => (
+            <article class="grid grid-cols-[3rem_1fr] gap-4 border-b rule py-5">
+              <span class="font-serif text-4xl text-accent">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <h3 class="display m-0 text-2xl">
+                  <a class="no-underline" href={entryHref(entry)}>
+                    {entry.data.title}
+                  </a>
+                </h3>
+                <p class="my-2 text-sm text-muted">{entry.data.description}</p>
+                <p class="eyeline text-accent">
+                  {entry.data.tags.join("  ·  ")}
+                </p>
+              </div>
+            </article>
+          ))
+        ) : (
+          <EmptyState
+            title="No published projects yet"
+            path="content/projects/"
+            compact
+          />
+        )
+      }
+    </div>
+
+    <div class="max-lg:col-span-2 max-lg:mt-10 max-md:mt-0">
+      <SectionHeading
+        index="04"
+        title="Recent writing"
+        href="/writing/"
+        linkLabel="All writing"
+      />
+      {
+        posts.length > 0 ? (
+          posts.slice(0, 5).map((entry) => (
+            <article class="grid grid-cols-[6rem_1fr_1.5rem] gap-4 border-b rule py-4">
+              <time
+                class="eyeline text-accent"
+                datetime={entry.data.date.toISOString()}
+              >
+                {formatDate(entry.data.date)}
+              </time>
+              <h3 class="m-0 font-serif text-lg leading-snug">
+                <a class="no-underline" href={entryHref(entry)}>
+                  {entry.data.title}
+                </a>
+              </h3>
+              <span class="text-accent" aria-hidden="true">
+                →
+              </span>
+            </article>
+          ))
+        ) : (
+          <EmptyState
+            title="No published writing yet"
+            path="content/posts/"
+            compact
+          />
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

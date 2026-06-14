@@ -1,0 +1,172 @@
+---
+import ContentRow from "@/components/ContentRow.astro";
+import EmptyState from "@/components/EmptyState.astro";
+import { getAllTags, getPublishedGarden } from "@/lib/content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const garden = await getPublishedGarden();
+const tags = getAllTags(garden).slice(0, 6);
+---
+
+<BaseLayout
+  title="Garden — Kadphol"
+  description="Evergreen notes, working ideas, and technical references that improve over time."
+>
+  <section class="shell pt-14">
+    <div class="grid grid-cols-[12rem_minmax(0,1fr)] gap-12 max-md:block">
+      <aside class="pt-3 max-md:hidden">
+        <p class="eyeline">Index</p>
+        <ol
+          class="m-0 mt-8 list-none space-y-5 p-0 font-serif text-4xl text-muted"
+        >
+          <li class="text-accent">01 —</li>
+          <li>02</li>
+          <li>03</li>
+          <li>04</li>
+        </ol>
+      </aside>
+
+      <div>
+        <h1 class="display m-0 text-[clamp(4rem,8vw,7rem)]">Garden</h1>
+        <p class="mt-4 max-w-xl text-xl text-muted">
+          Evergreen notes, working ideas, and technical references that improve
+          over time.
+        </p>
+
+        <div class="mt-12">
+          <label class="eyeline mb-3 block" for="garden-search"
+            >Search notes</label
+          >
+          <div class="flex border border-[var(--accent)]">
+            <svg
+              class="m-4 shrink-0"
+              aria-hidden="true"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            >
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="m20 20-3.5-3.5"></path>
+            </svg>
+            <input
+              id="garden-search"
+              class="min-w-0 flex-1 border-0 bg-transparent px-2 py-4 outline-none"
+              type="search"
+              placeholder="Search titles, summaries, and tags"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div
+          class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 border-b rule text-sm"
+          aria-label="Garden filters"
+        >
+          <button
+            class="garden-filter border-b-2 border-[var(--accent)] bg-transparent px-0 py-3 text-accent"
+            type="button"
+            data-filter="all">All</button
+          >
+          {
+            ["evergreen", "growing", "seedling"].map((status) => (
+              <button
+                class="garden-filter border-b-2 border-transparent bg-transparent px-0 py-3 capitalize"
+                type="button"
+                data-filter={status}
+              >
+                {status}
+              </button>
+            ))
+          }
+          <span class="h-5 w-px bg-[var(--rule)]"></span>
+          {
+            tags.map(([tag]) => (
+              <button
+                class="garden-filter border-b-2 border-transparent bg-transparent px-0 py-3"
+                type="button"
+                data-filter={tag.toLowerCase()}
+              >
+                {tag}
+              </button>
+            ))
+          }
+          <span id="garden-count" class="ml-auto py-3 text-muted">
+            {garden.length} notes
+          </span>
+        </div>
+
+        <div id="garden-results">
+          {
+            garden.length > 0 ? (
+              garden.map((entry, index) => (
+                <div
+                  data-garden-row
+                  data-status={entry.data.status.toLowerCase()}
+                  data-tags={entry.data.tags.join(" ").toLowerCase()}
+                  data-search={`${entry.data.title} ${entry.data.description} ${entry.data.summary ?? ""} ${entry.data.tags.join(" ")}`.toLowerCase()}
+                >
+                  <ContentRow entry={entry} {index} />
+                </div>
+              ))
+            ) : (
+              <EmptyState
+                title="The garden is ready for its first note"
+                path="content/garden/"
+              />
+            )
+          }
+        </div>
+        <p id="garden-empty" class="hidden border-b rule py-12 text-muted">
+          No notes match this search.
+        </p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const search = document.querySelector<HTMLInputElement>("#garden-search");
+  const rows = [...document.querySelectorAll<HTMLElement>("[data-garden-row]")];
+  const buttons = [
+    ...document.querySelectorAll<HTMLButtonElement>(".garden-filter"),
+  ];
+  const count = document.querySelector<HTMLElement>("#garden-count");
+  const empty = document.querySelector<HTMLElement>("#garden-empty");
+  let filter = "all";
+
+  const update = () => {
+    const query = search?.value.trim().toLowerCase() ?? "";
+    let visible = 0;
+
+    rows.forEach((row) => {
+      const matchesQuery = (row.dataset.search ?? "").includes(query);
+      const matchesFilter =
+        filter === "all" ||
+        row.dataset.status === filter ||
+        (row.dataset.tags ?? "").split(" ").includes(filter);
+      row.hidden = !(matchesQuery && matchesFilter);
+      if (!row.hidden) visible += 1;
+    });
+
+    if (count)
+      count.textContent = `${visible} ${visible === 1 ? "note" : "notes"}`;
+    empty?.classList.toggle("hidden", visible !== 0 || rows.length === 0);
+  };
+
+  search?.addEventListener("input", update);
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      filter = button.dataset.filter ?? "all";
+      buttons.forEach((item) => {
+        const active = item === button;
+        item.classList.toggle("border-[var(--accent)]", active);
+        item.classList.toggle("border-transparent", !active);
+        item.classList.toggle("text-accent", active);
+      });
+      update();
+    });
+  });
+</script>

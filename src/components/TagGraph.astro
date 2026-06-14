@@ -1,0 +1,68 @@
+---
+import { tagSlug, type ContentEntry } from "@/lib/content";
+
+interface Props {
+  entries: ContentEntry[];
+}
+
+const { entries } = Astro.props;
+const counts = new Map<string, number>();
+const connections = new Map<string, Set<string>>();
+
+for (const entry of entries) {
+  for (const tag of entry.data.tags) {
+    counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    const peers = connections.get(tag) ?? new Set<string>();
+    entry.data.tags
+      .filter((peer) => peer !== tag)
+      .forEach((peer) => peers.add(peer));
+    connections.set(tag, peers);
+  }
+}
+
+const tags = [...counts.entries()].sort(
+  ([a, aCount], [b, bCount]) => bCount - aCount || a.localeCompare(b),
+);
+---
+
+<section class="mt-16 border-t border-[var(--accent)] pt-6">
+  <div class="mb-8 flex items-end justify-between gap-6">
+    <div>
+      <p class="eyeline text-accent">Relationships</p>
+      <h2 class="display mb-0 mt-2 text-4xl">Tag graph</h2>
+    </div>
+    <p class="m-0 max-w-sm text-right text-sm text-muted max-sm:hidden">
+      Shared lines show topics that appear together in published entries.
+    </p>
+  </div>
+  {
+    tags.length > 0 ? (
+      <div class="grid grid-cols-2 border-t rule max-md:grid-cols-1">
+        {tags.map(([tag, count], index) => (
+          <a
+            class="group grid grid-cols-[3rem_minmax(0,1fr)_3rem] items-center gap-4 border-b rule py-5 no-underline odd:pr-8 even:border-l even:pl-8 max-md:border-l-0 max-md:px-0"
+            href={`/tags/${tagSlug(tag)}/`}
+          >
+            <span class="font-serif text-2xl text-accent">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <span>
+              <strong class="font-medium">{tag}</strong>
+              <small class="mt-1 block text-muted">
+                {[...(connections.get(tag) ?? [])].slice(0, 3).join(" · ") ||
+                  "No linked topics yet"}
+              </small>
+            </span>
+            <span class="text-right text-sm text-muted group-hover:text-[var(--accent)]">
+              {count}
+            </span>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="border-b rule py-8 text-muted">
+        The graph appears when published entries share tags.
+      </p>
+    )
+  }
+</section>

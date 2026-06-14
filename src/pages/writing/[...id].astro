@@ -1,0 +1,26 @@
+---
+import type { GetStaticPaths } from "astro";
+import {
+  getAllPublished,
+  getBacklinks,
+  getPublishedPosts,
+  getRelated,
+  type PostEntry,
+} from "@/lib/content";
+import ArticleLayout from "@/layouts/ArticleLayout.astro";
+
+export const getStaticPaths = (async () => {
+  const entries = await getPublishedPosts();
+  return entries.map((entry) => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}) satisfies GetStaticPaths;
+
+const { entry } = Astro.props as { entry: PostEntry };
+const all = await getAllPublished();
+const related = getRelated(entry, all);
+const backlinks = getBacklinks(entry, all);
+---
+
+<ArticleLayout {entry} {related} {backlinks} index="W01" />
