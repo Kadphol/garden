@@ -3,6 +3,18 @@
   "framework": "astro",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "resume.kadphol.com"
+        }
+      ],
+      "destination": "/resume"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
