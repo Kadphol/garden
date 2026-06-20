@@ -13,6 +13,7 @@ interface Props {
   publishedTime?: Date;
   updatedTime?: Date;
   structuredData?: Record<string, unknown> | Record<string, unknown>[];
+  showChrome?: boolean;
 }
 
 const {
@@ -24,6 +25,7 @@ const {
   publishedTime,
   updatedTime,
   structuredData,
+  showChrome = true,
 } = Astro.props;
 ---
 
@@ -93,10 +95,10 @@ const {
     >
       Skip to content
     </a>
-    <Header />
+    {showChrome && <Header />}
     <main id="main-content">
       <slot />
     </main>
-    <Footer />
+    {showChrome && <Footer />}
   </body>
 </html>

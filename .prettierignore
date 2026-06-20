@@ -1,5 +1,6 @@
 .agents/
 .astro/
+.playwright-cli/
 content/
 dist/
 node_modules/

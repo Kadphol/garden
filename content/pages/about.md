@@ -47,4 +47,4 @@ architecture, Frontend Architecture, Web Performance, SEO, Analytics Integration
 
 - [GitHub](https://github.com/Kadphol)
 - [LinkedIn](https://www.linkedin.com/in/Kadphol)
-- [Email](mailto:kadphol.len@outlook.co.th)
+- [Resume and protected contact details](/resume/)

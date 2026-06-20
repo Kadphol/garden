@@ -1,0 +1,463 @@
+<div class="contact-list" aria-label="Protected contact details">
+  <button
+    class="contact-trigger"
+    type="button"
+    data-contact-open
+    data-contact-locked
+  >
+    <svg
+      aria-hidden="true"
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+    >
+      <rect x="3" y="5" width="18" height="14" rx="1"></rect>
+      <path d="m4 7 8 6 8-6"></path>
+    </svg>
+    <span>Email</span>
+    <span class="contact-trigger__hint">(play to reveal)</span>
+  </button>
+  <button
+    class="contact-trigger"
+    type="button"
+    data-contact-open
+    data-contact-locked
+  >
+    <svg
+      aria-hidden="true"
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+    >
+      <path
+        d="M6.5 3h3l1.5 5-2 1.5a15 15 0 0 0 5.5 5.5l1.5-2 5 1.5v3A3.5 3.5 0 0 1 17.5 21C9.5 20.5 3.5 14.5 3 6.5A3.5 3.5 0 0 1 6.5 3Z"
+      ></path>
+    </svg>
+    <span>Phone</span>
+    <span class="contact-trigger__hint">(play to reveal)</span>
+  </button>
+
+  <div class="contact-inline-unlocked" data-contact-inline-unlocked hidden>
+    <a data-inline-email-link></a>
+    <a data-inline-phone-link></a>
+  </div>
+</div>
+
+<dialog
+  id="contact-gate"
+  class="contact-dialog"
+  aria-labelledby="contact-title"
+>
+  <div class="contact-dialog__header">
+    <div>
+      <p class="eyeline text-accent">Human check</p>
+      <h2 id="contact-title" class="display m-0 text-4xl">
+        Unlock contact details
+      </h2>
+    </div>
+    <button
+      class="contact-dialog__close"
+      type="button"
+      data-contact-close
+      aria-label="Close contact challenge">×</button
+    >
+  </div>
+
+  <div data-game-view>
+    <p class="contact-dialog__intro">
+      Match all four symbol pairs to reveal my email and phone number.
+    </p>
+    <div class="memory-game" role="grid" aria-label="Memory matching game">
+      {
+        Array.from({ length: 8 }, (_, index) => (
+          <button
+            class="memory-card"
+            type="button"
+            role="gridcell"
+            aria-label={`Hidden card ${index + 1}`}
+            data-card={index}
+          />
+        ))
+      }
+    </div>
+    <div class="contact-dialog__status-row">
+      <p class="m-0 text-sm text-muted" role="status" data-game-status>
+        Choose two cards.
+      </p>
+      <button class="contact-reset" type="button" data-game-reset>
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="contact-unlocked" data-contact-unlocked hidden>
+    <p class="contact-unlocked__message">
+      Contact unlocked for this browser session.
+    </p>
+    <a class="contact-unlocked__link" data-email-link></a>
+    <a class="contact-unlocked__link" data-phone-link></a>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>("#contact-gate");
+  const openButtons = document.querySelectorAll<HTMLButtonElement>(
+    "[data-contact-open]",
+  );
+  const closeButton = dialog?.querySelector<HTMLButtonElement>(
+    "[data-contact-close]",
+  );
+  const resetButton =
+    dialog?.querySelector<HTMLButtonElement>("[data-game-reset]");
+  const cards = [
+    ...(dialog?.querySelectorAll<HTMLButtonElement>("[data-card]") ?? []),
+  ];
+  const status =
+    dialog?.querySelector<HTMLElement>("[data-game-status]") ?? null;
+  const gameView = dialog?.querySelector<HTMLElement>("[data-game-view]");
+  const unlockedView = dialog?.querySelector<HTMLElement>(
+    "[data-contact-unlocked]",
+  );
+  const emailLink =
+    dialog?.querySelector<HTMLAnchorElement>("[data-email-link]");
+  const phoneLink =
+    dialog?.querySelector<HTMLAnchorElement>("[data-phone-link]");
+  const lockedContacts = document.querySelectorAll<HTMLElement>(
+    "[data-contact-locked]",
+  );
+  const inlineUnlocked = document.querySelector<HTMLElement>(
+    "[data-contact-inline-unlocked]",
+  );
+  const inlineEmailLink = document.querySelector<HTMLAnchorElement>(
+    "[data-inline-email-link]",
+  );
+  const inlinePhoneLink = document.querySelector<HTMLAnchorElement>(
+    "[data-inline-phone-link]",
+  );
+
+  const symbols = ["◆", "●", "▲", "◆", "■", "●", "■", "▲"];
+  const emailCodes = [
+    34, 40, 45, 57, 33, 38, 37, 103, 37, 44, 39, 9, 38, 60, 61, 37, 38, 38, 34,
+    103, 42, 38, 103, 61, 33,
+  ];
+  const phoneDisplayCodes = [
+    97, 98, 127, 127, 96, 105, 113, 125, 100, 125, 124, 123, 100, 126, 123, 123,
+    124,
+  ];
+  const phoneHrefCodes = [
+    98, 127, 127, 113, 125, 125, 124, 123, 126, 123, 123, 124,
+  ];
+
+  let revealed: number[] = [];
+  let matched = new Set<number>();
+  let checkingPair = false;
+
+  const decode = (codes: number[]) =>
+    String.fromCharCode(...codes.map((code) => code ^ 73));
+
+  const renderCards = () => {
+    cards.forEach((card, index) => {
+      const visible = revealed.includes(index) || matched.has(index);
+      card.textContent = visible ? symbols[index] : "?";
+      card.disabled = matched.has(index) || checkingPair;
+      card.dataset.state = matched.has(index)
+        ? "matched"
+        : visible
+          ? "revealed"
+          : "hidden";
+      card.setAttribute(
+        "aria-label",
+        matched.has(index)
+          ? `Matched ${symbols[index]} card`
+          : visible
+            ? `${symbols[index]} card`
+            : `Hidden card ${index + 1}`,
+      );
+    });
+  };
+
+  const revealContact = () => {
+    const email = decode(emailCodes);
+    const phoneDisplay = decode(phoneDisplayCodes);
+    const phoneHref = decode(phoneHrefCodes);
+
+    if (emailLink) {
+      emailLink.textContent = email;
+      emailLink.href = `mailto:${email}`;
+    }
+    if (phoneLink) {
+      phoneLink.textContent = phoneDisplay;
+      phoneLink.href = `tel:${phoneHref}`;
+    }
+    if (inlineEmailLink) {
+      inlineEmailLink.textContent = email;
+      inlineEmailLink.href = `mailto:${email}`;
+    }
+    if (inlinePhoneLink) {
+      inlinePhoneLink.textContent = phoneDisplay;
+      inlinePhoneLink.href = `tel:${phoneHref}`;
+    }
+
+    if (gameView) gameView.hidden = true;
+    if (unlockedView) unlockedView.hidden = false;
+    lockedContacts.forEach((contact) => {
+      contact.hidden = true;
+    });
+    if (inlineUnlocked) inlineUnlocked.hidden = false;
+    sessionStorage.setItem("resume-contact-unlocked", "true");
+  };
+
+  const resetGame = () => {
+    revealed = [];
+    matched = new Set<number>();
+    checkingPair = false;
+    if (gameView) gameView.hidden = false;
+    if (unlockedView) unlockedView.hidden = true;
+    if (status) status.textContent = "Choose two cards.";
+    renderCards();
+  };
+
+  const chooseCard = (index: number) => {
+    if (checkingPair || matched.has(index) || revealed.includes(index)) return;
+
+    revealed.push(index);
+    renderCards();
+
+    if (revealed.length < 2) {
+      if (status) status.textContent = "Choose one more card.";
+      return;
+    }
+
+    checkingPair = true;
+    const [first, second] = revealed;
+    const isMatch = symbols[first] === symbols[second];
+
+    window.setTimeout(
+      () => {
+        if (isMatch) {
+          matched.add(first);
+          matched.add(second);
+          if (matched.size === cards.length) {
+            revealContact();
+            return;
+          }
+          if (status) {
+            status.textContent = `${matched.size / 2} of ${cards.length / 2} pairs matched.`;
+          }
+        } else if (status) {
+          status.textContent = "Not a pair. Try again.";
+        }
+
+        revealed = [];
+        checkingPair = false;
+        renderCards();
+      },
+      isMatch ? 280 : 650,
+    );
+  };
+
+  openButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      if (sessionStorage.getItem("resume-contact-unlocked") === "true") {
+        revealContact();
+      } else {
+        resetGame();
+      }
+      dialog?.showModal();
+    });
+  });
+
+  cards.forEach((card) => {
+    card.addEventListener("click", () => {
+      chooseCard(Number(card.dataset.card));
+    });
+  });
+
+  resetButton?.addEventListener("click", resetGame);
+  closeButton?.addEventListener("click", () => dialog?.close());
+  dialog?.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+
+  if (sessionStorage.getItem("resume-contact-unlocked") === "true") {
+    revealContact();
+  }
+</script>
+
+<style>
+  .contact-list {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .contact-trigger {
+    display: grid;
+    grid-template-columns: 1.1rem auto 1fr;
+    align-items: center;
+    gap: 0.5rem;
+    width: fit-content;
+    border: 0;
+    background: transparent;
+    padding: 0.15rem 0;
+    color: var(--ink);
+    font-size: 0.84rem;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .contact-trigger:hover .contact-trigger__hint {
+    color: var(--accent);
+  }
+
+  .contact-trigger__hint {
+    color: var(--muted);
+    text-decoration: underline;
+    text-decoration-color: var(--rule);
+    text-underline-offset: 0.2em;
+  }
+
+  .contact-inline-unlocked {
+    display: grid;
+    gap: 0.25rem;
+    font-size: 0.84rem;
+  }
+
+  .contact-inline-unlocked[hidden] {
+    display: none;
+  }
+
+  .contact-inline-unlocked a {
+    width: fit-content;
+    color: var(--accent);
+    text-decoration-color: var(--rule);
+  }
+
+  .contact-dialog {
+    position: fixed;
+    inset: 0;
+    width: min(100% - 2rem, 31rem);
+    max-height: min(100% - 2rem, 42rem);
+    margin: auto;
+    overflow-y: auto;
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    color: var(--ink);
+    padding: 1.5rem;
+    box-shadow: 0 1.5rem 4rem rgb(17 19 24 / 18%);
+  }
+
+  .contact-dialog::backdrop {
+    background: rgb(17 19 24 / 52%);
+    backdrop-filter: blur(3px);
+  }
+
+  .contact-dialog__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1rem;
+  }
+
+  .contact-dialog__close {
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    border: 1px solid var(--rule);
+    background: transparent;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .contact-dialog__intro {
+    margin: 1.25rem 0;
+    color: var(--muted);
+  }
+
+  .memory-game {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.55rem;
+    width: min(100%, 20rem);
+    margin-inline: auto;
+  }
+
+  .memory-card {
+    aspect-ratio: 1;
+    border: 1px solid var(--rule);
+    background: var(--faint);
+    color: var(--accent);
+    font-family: var(--serif);
+    font-size: 2rem;
+    cursor: pointer;
+    transition:
+      border-color 140ms ease,
+      background-color 140ms ease,
+      transform 140ms ease;
+  }
+
+  .memory-card:hover:not(:disabled) {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .memory-card[data-state="revealed"] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .memory-card[data-state="matched"] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--paper);
+  }
+
+  .memory-card:disabled {
+    cursor: default;
+  }
+
+  .contact-dialog__status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .contact-reset {
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    font-size: 0.8rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+  }
+
+  .contact-unlocked {
+    padding-top: 1.5rem;
+  }
+
+  .contact-unlocked__message {
+    margin-top: 0;
+    color: var(--muted);
+  }
+
+  .contact-unlocked__link {
+    display: block;
+    border-top: 1px solid var(--rule);
+    padding: 0.9rem 0;
+    color: var(--accent);
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+</style>
