@@ -2,6 +2,8 @@
 import Footer from "@/components/Footer.astro";
 import Header from "@/components/Header.astro";
 import { siteConfig } from "@/site.config";
+import SpeedInsights from "@vercel/speed-insights/astro";
+import Analytics from "@vercel/analytics/astro";
 import "@/styles/global.css";
 
 interface Props {
@@ -87,6 +89,7 @@ const {
         />
       )
     }
+    <Analytics />
   </head>
   <body>
     <a
@@ -102,3 +105,5 @@ const {
     {showChrome && <Footer />}
   </body>
 </html>
+
+<SpeedInsights />
