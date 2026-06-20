@@ -10,6 +10,10 @@
         {
           "type": "host",
           "value": "resume.kadphol.com"
+        },
+        {
+          "type": "host",
+          "value": "resume.kadphol.online"
         }
       ],
       "destination": "/resume"
