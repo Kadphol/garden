@@ -12,7 +12,8 @@ export const onRequest = defineMiddleware((context, next) => {
     // Prevent infinite loop if the request is already accessing the subpath assets
     if (!url.pathname.startsWith(targetPath)) {
       // Rewrite the URL internally to the specific path
-      url.pathname = `${targetPath}${url.pathname}`;
+      url.pathname = `${targetPath}`;
+
       return context.redirect(url.toString(), 307);
       // Note: In an Astro Edge context, returning a modified URL context
       // preserves the browser address bar string transparently.
