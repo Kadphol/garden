@@ -3,7 +3,7 @@
   "framework": "astro",
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
-  "rewrites": [
+  "redirects": [
     {
       "source": "/:path*",
       "has": [
