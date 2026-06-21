@@ -7,7 +7,7 @@ const site = process.env.SITE_URL ?? "https://example.com";
 
 export default defineConfig({
   site,
-  output: "static",
+  output: "server",
   integrations: [sitemap()],
   markdown: {
     shikiConfig: {
@@ -19,6 +19,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   adapter: vercel({
+    middlewareMode: "edge",
     webAnalytics: {
       enabled: true, // set to false when using @vercel/analytics@1.4.0
     },
