@@ -6,7 +6,7 @@ export const onRequest = defineMiddleware((context, next) => {
 
   // Define your target subdomain and the internal path it should point to
   const targetSubdomain = "resume.kadphol.com";
-  const targetPath = "/";
+  const targetPath = "/resume";
 
   if (hostname === targetSubdomain) {
     // Prevent infinite loop if the request is already accessing the subpath assets
