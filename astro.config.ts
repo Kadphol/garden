@@ -18,6 +18,10 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
   },
+  redirects: {
+    "/": "https://kadphol.com/resume",
+    "resume.kadphol.com": "https://kadphol.com/resume",
+  },
   adapter: vercel({
     middlewareMode: "edge",
     webAnalytics: {

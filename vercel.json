@@ -5,14 +5,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/",
+      "source": "/:path*",
       "has": [
         {
           "type": "host",
           "value": "resume.kadphol.com"
         }
       ],
-      "destination": "/resume"
+      "destination": "https://kadphol.com/resume"
     }
   ],
   "headers": [
