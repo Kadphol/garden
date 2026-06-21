@@ -19,8 +19,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
   redirects: {
-    "/": "https://kadphol.com/resume",
-    "resume.kadphol.com": "https://kadphol.com/resume",
+    "/": "/resume",
   },
   adapter: vercel({
     middlewareMode: "edge",
